@@ -48,7 +48,7 @@ export default function App() {
       <header className="top">
         <div className="top-in">
           <div className="brand">
-            <div className="logo"><img src="/logo-u4.png" alt="" /></div>
+            <div className="logo"><img src="/logo-u.png" alt="" /></div>
             <div><b>Admin</b><small>{'Lista & Gastos & Compras'}</small></div>
           </div>
           <div className="date">
