@@ -60,7 +60,7 @@ export default function App() {
         </div>
       </header>
       <nav className="tabs">
-        {[['hoy', 'Hoy'], ['gastos', 'Gastos'], ['despues', 'Después']].map(([k, l]) => (
+          {[['hoy', 'Notas'], ['gastos', 'Gastos'], ['despues', 'Después']].map(([k, l]) => (
           <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>
         ))}
       </nav>
@@ -94,12 +94,19 @@ function ItemForm({ init, onSave, onCancel }) {
 function Lista({ list, db, act }) {
   const [form, setForm] = useState(null)
   const [showDone, setShowDone] = useState(false)
+  const [quick, setQuick] = useState('')
   const hoy = list === 'hoy'
   const all = db.items.filter(i => i.list === list)
   const pend = all.filter(i => !i.done)
   const done = all.filter(i => i.done)
   const est = pend.reduce((s, i) => s + i.qty * i.price, 0)
   const pct = all.length ? Math.round((done.length / all.length) * 100) : 0
+
+  const addQuick = e => {
+    e.preventDefault()
+    const name = quick.trim()
+    if (!name) return alert('Escribe algo para anotar.')
+  }
 
   const row = i => (
     <div key={i.id} className={'card item' + (i.done ? ' done' : '')}>
@@ -111,7 +118,7 @@ function Lista({ list, db, act }) {
       {i.price > 0 && <span className="mono">{money(i.qty * i.price)}</span>}
       <div className="ia">
         <button title="Editar" onClick={() => setForm(i)}>✎</button>
-        <button title={hoy ? 'Mover a Después' : 'Mover a Hoy'} onClick={() => act.editItem(i.id, { list: hoy ? 'despues' : 'hoy' })}>⇄</button>
+        <button title={hoy ? 'Mover a Después' : 'Mover a Notas'} onClick={() => act.editItem(i.id, { list: hoy ? 'despues' : 'hoy' })}>⇄</button>
         <button title="Borrar" onClick={() => act.delItem(i.id)}>✕</button>
       </div>
     </div>
@@ -120,10 +127,24 @@ function Lista({ list, db, act }) {
   return (
     <section>
       <p className="eyebrow">Lista de compras</p>
-      <h1>{hoy ? 'Por comprar hoy' : 'Para comprar después'}</h1>
-      {!hoy && <p className="lead">Cosas que no necesitas hoy, pero quieres tener anotadas para cuando salgas.</p>}
+      <h1>{hoy ? 'Notas' : 'Para comprar después'}</h1>
+      <p className="lead">
+        {hoy
+          ? 'Anota al momento lo que se te ocurra comprar hoy.'
+          : 'Cosas que no necesitas hoy, pero quieres tener anotadas para cuando salgas.'}
+      </p>
       {hoy && (
         <>
+          <form className="quick" onSubmit={addQuick}>
+            <input
+              value={quick}
+              onChange={e => setQuick(e.target.value)}
+              placeholder="¿Qué se te acaba de ocurrir?"
+              enterKeyHint="done"
+              autoComplete="off"
+            />
+            <button type="submit" className="btn" aria-label="Agregar nota">+</button>
+          </form>
           <div className="stats">
             <div><small>Progreso</small><span className="mono big">{pct}%</span></div>
             <div><small>Comprados</small><span className="mono big">{done.length}/{all.length}</span></div>
@@ -133,7 +154,7 @@ function Lista({ list, db, act }) {
         </>
       )}
       <div className="bar">
-        <span className="eyebrow">Artículos</span>
+        <span className="eyebrow">{hoy ? 'Mis notas' : 'Artículos'}</span>
         <button className="btn" onClick={() => setForm('new')}>+ Agregar artículo</button>
       </div>
       {form && (
@@ -146,10 +167,9 @@ function Lista({ list, db, act }) {
       )}
       {all.length === 0 ? (
         <div className="empty">
-          <div>{hoy ? '🛍️' : '🗒️'}</div>
-          <h3>{hoy ? 'Todavía no tienes artículos' : 'Nada pendiente para después'}</h3>
-          <p>{hoy ? 'Agrega el primero para armar tu lista de hoy.' : 'Anota aquí lo que se te vaya ocurriendo.'}</p>
-          <button className="btn soft" onClick={() => setForm('new')}>+ Agregar artículo</button>
+          <div>{hoy ? '📝' : '🗒️'}</div>
+          <h3>{hoy ? 'Todavía no tienes notas' : 'Nada pendiente para después'}</h3>
+          <p>{hoy ? 'Escribe arriba lo que se te ocurra y listo.' : 'Anota aquí lo que se te vaya ocurriendo.'}</p>
         </div>
       ) : (
         <div className="list">{pend.map(row)}</div>
@@ -163,11 +183,13 @@ function Lista({ list, db, act }) {
     </section>
   )
 }
-
 function ExpForm({ onSave, onCancel }) {
   const [f, setF] = useState({ amount: '', cat: 'Comida', date: iso(new Date()), note: '' })
   const s = k => e => setF({ ...f, [k]: e.target.value })
-  const save = () => +f.amount > 0 && onSave({ ...f, amount: +f.amount })
+  const save = () => {
+  if (!f.name.trim()) return alert('Escribe qué necesitas comprar antes de guardar.')
+  onSave({ ...f, name: f.name.trim(), qty: Math.max(1, +f.qty || 1), price: +f.price || 0 })
+}
   return (
     <div className="card form">
       <input type="number" min="0" step="0.01" inputMode="decimal" autoFocus placeholder="Monto MX$" value={f.amount} onChange={s('amount')} />
