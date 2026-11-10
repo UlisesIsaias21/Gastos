@@ -118,7 +118,7 @@ function Lista({ list, db, act }) {
       {i.price > 0 && <span className="mono">{money(i.qty * i.price)}</span>}
       <div className="ia">
         <button title="Editar" onClick={() => setForm(i)}>✎</button>
-        <button title={hoy ? 'Mover a Después' : 'Mover a Notas'} onClick={() => act.editItem(i.id, { list: hoy ? 'despues' : 'hoy' })}>⇄</button>
+        <button title={hoy ? 'Mover a Después' : 'Mover a Notas'} onClick={() => act.editItem(i.id, { list: hoy ? ' ' : 'hoy' })}>⇄</button>
         <button title="Borrar" onClick={() => act.delItem(i.id)}>✕</button>
       </div>
     </div>
